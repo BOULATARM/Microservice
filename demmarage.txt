@@ -1,0 +1,7 @@
+AuthService:
+cd C:\Users\hp\Desktop\DSBD\s3\MicroService\TP2\backend\user-service
+.\.venv\Scripts\python.exe manage.py runserver 8001
+
+ShippingService:
+cd C:\Users\hp\Desktop\DSBD\s3\MicroService\TP2\backend\shipping-service
+.\.venv\Scripts\python.exe manage.py runserver 8086
