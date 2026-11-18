@@ -218,32 +218,6 @@ Le JSON reste syntaxiquement correct, mais le type de `price` passe de **nombre*
 
 Ces routes V2 **ne sont pas présentes dans le dépôt Auth/Shipping** ; elles constituent une proposition pour la question 6 et nécessitent une mise en œuvre par le membre responsable de Catalog.
 
-## Ce qui reste à faire
-
-### Obligatoire pour finaliser la contribution individuelle à Q2–Q5
-
-- [ ] Ajouter ce document (ou les réponses équivalentes) au dépôt dans `docs/TP3_Q2_Q5_Auth_Shipping.md`.
-- [ ] Compléter et vérifier les schémas d'erreur OpenAPI manquants (`401` Auth, `400` Shipping).
-- [ ] Valider les deux YAML avec Swagger Editor.
-- [ ] Faire et conserver des captures Postman pour les cas positifs et négatifs.
-- [ ] Vérifier que les réponses Postman sont conformes aux deux contrats.
-- [ ] Ajouter les liens vers `contracts/*.yaml` dans le README GitHub : la version consultée du README ne contenait pas de section dédiée aux contrats.
-- [ ] Corriger d'urgence `shipping-service/config/settings.py` : la clé secrète codée en dur écrase encore celle du `.env` dans le fichier publié. La remplacer par une nouvelle et retirer la seconde affectation. Traiter la clé publique comme compromise.
-
-### Recommandé pour la qualité et la sécurité
-
-- [ ] Implémenter les tests automatisés (les deux `tests.py` publiés sont encore des squelettes).
-- [ ] Sécuriser les endpoints Shipping avant tout usage non local, en décidant des autorisations avec l'équipe.
-- [ ] Vérifier le scénario Orders réel → Shipping ; actuellement `orderId` peut être envoyé sans prouver l'existence d'une commande.
-- [ ] Tester le réinstallation des dépendances sur un environnement propre.
-
-### Nécessaire pour le TP3 collectif, mais hors du seul dépôt Auth/Shipping
-
-- [ ] Question 1 : diagramme/tableau de communication entre les 6 microservices, à valider par l'équipe.
-- [ ] Question 2 : quatre contrats complémentaires (Catalog, Orders, Inventory, Payments).
-- [ ] Question 3 : validation et preuves d'implémentation des quatre autres contrats.
-- [ ] Question 6 : mise en œuvre Catalog V1/V2, contrat OpenAPI mis à jour, tests de régression du frontend et d'Orders.
-
 ## Sources examinées
 
 - Énoncé du professeur : *LAB 3: DESIGNING AN API CONTRACT*, pages 1–2 (fichier fourni dans la conversation).
