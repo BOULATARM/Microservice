@@ -18,6 +18,9 @@ Microservice/
 │   ├── shipments/
 │   ├── manage.py
 │   └── requirements.txt
+├── contracts/
+│   ├── auth.openapi.yaml
+│   └── shipping.openapi.yaml
 ├── .gitignore
 └── README.md
 ```
@@ -175,7 +178,38 @@ PREPARING --> SHIPPED --> IN_TRANSIT --> DELIVERED
 
 Les doublons de `orderId` sont refusés par un code HTTP `409 Conflict`. Le champ `orderId` est un identifiant externe : Shipping ne lit pas directement la base de données du service Orders.
 
-## 4. Connexion au frontend React du TP
+## 4. Contrats API REST — OpenAPI 3.0.3
+
+Les interfaces des deux microservices sont documentées avec **OpenAPI 3.0.3** afin que les membres du groupe puissent intégrer les services sans dépendre de leur implémentation Django.
+
+| Microservice | Contrat OpenAPI | Port local | Opérations |
+| --- | --- | --- | --- |
+| **User / Auth** | [auth.openapi.yaml](contracts/auth.openapi.yaml) | `8001` | Register, Login, Me, Logout |
+| **Shipping** | [shipping.openapi.yaml](contracts/shipping.openapi.yaml) | `8086` | Create Shipment, List Shipments, Get by Order ID, Update Status |
+
+**Contrat Auth :**
+- `POST /api/auth/register` → création de compte (`201` en cas de succès).
+- `POST /api/auth/login` → réponse avec `user` et `token` (JWT HS256 ; `200` en cas de succès).
+- `GET /api/auth/me` → profil, avec `Authorization: Bearer <JWT>`.
+- `POST /api/auth/logout` → confirmation de déconnexion, avec Bearer JWT. **Le token n'est pas révoqué côté serveur** dans la version actuelle.
+
+**Contrat Shipping :**
+- `POST /api/shipments` → création (`201`), doublon de `orderId` refusé (`409`).
+- `GET /api/shipments` → liste des expéditions (`200`).
+- `GET /api/shipments/order/{orderId}` → recherche par commande (`200` ou `404`).
+- `PATCH /api/shipments/{id}/status` → changement de statut (`200` ou `409` si transition interdite).
+
+Les états de livraison autorisés sont `PREPARING`, `SHIPPED`, `IN_TRANSIT`, `DELIVERED` et `CANCELLED`. Les transitions métier sont décrites dans le contrat Shipping.
+
+### Consulter et vérifier les contrats
+
+1. Ouvrir [Swagger Editor](https://editor.swagger.io/).
+2. Importer le fichier YAML depuis `contracts/` (**File → Import File**) ou coller son contenu.
+3. Vérifier les chemins, schémas JSON, méthodes HTTP, codes de réponse et éventuelles erreurs de validation.
+
+> Les contrats OpenAPI décrivent les API ; ils ne déploient pas automatiquement les microservices. Les tests d'intégration doivent vérifier que les réponses de Django respectent ces contrats.
+
+## 5. Connexion au frontend React du TP
 
 Frontend de référence : [ZOUHEIRBN/MSOA-E-com-Demo](https://github.com/ZOUHEIRBN/MSOA-E-com-Demo).
 
@@ -214,7 +248,7 @@ CORS_ALLOWED_ORIGINS = [
 
 La communication interservices avec Orders et les autres composants doit encore être validée lors de l'intégration de l'équipe. Une commande simulée dans le frontend n'est pas une commande persistée par un service Orders réel.
 
-## 5. Configuration des secrets
+## 6. Configuration des secrets
 
 **Ne jamais publier une clé Django `SECRET_KEY` réelle, un JWT, ni une base SQLite contenant des utilisateurs.**
 
@@ -237,7 +271,7 @@ Générer une nouvelle clé secrète localement :
 
 Copier la valeur générée dans `.env` (non suivi par Git). Utiliser une clé distincte pour chacun des deux services. Si des clés ont déjà été publiées, les remplacer.
 
-## 6. Vérifications
+## 7. Vérifications
 
 ```powershell
 .\.venv\Scripts\python.exe manage.py check
@@ -246,6 +280,6 @@ Copier la valeur générée dans `.env` (non suivi par Git). Utiliser une clé d
 
 Les opérations principales ont été testées localement avec Postman ; des parcours d'authentification et de suivi ont également été visualisés dans React. La validation complète en équipe et les tests de sécurité restent à compléter.
 
-## 7. Avertissement
+## 8. Avertissement
 
 Projet pédagogique pour exécution locale. Le serveur Django de développement, SQLite sous charge élevée, l'authentification JWT et les endpoints Shipping ne constituent pas une configuration prête pour la production. Les opérations d'expédition doivent être protégées par une authentification et des autorisations appropriées avant toute exposition publique.
