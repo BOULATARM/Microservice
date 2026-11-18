@@ -1,0 +1,147 @@
+openapi: 3.0.3
+info:
+  title: MSOA Shop - Shipping Service
+  version: 1.0.0
+  description: |
+    Contrat REST du microservice Shipping Django + SQLite du TP.
+    Un orderId représente la référence externe vers Orders et n'est pas une
+    clé étrangère vers la base de données d'un autre microservice.
+    Dans le backend présenté, ces routes ne vérifient pas encore les droits d'accès.
+servers:
+  - url: http://localhost:8086
+    description: Développement local
+paths:
+  /api/shipments:
+    get:
+      summary: Lister les expéditions
+      operationId: listShipments
+      responses:
+        '200':
+          description: Tableau d'expéditions
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Shipment' }
+    post:
+      summary: Créer une expédition
+      operationId: createShipment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateShipmentRequest' }
+            example:
+              orderId: order-123
+              address:
+                name: Demo Customer
+                address: 123 Main Street
+                city: Casablanca
+      responses:
+        '201':
+          description: Expédition créée avec le statut PREPARING
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Shipment' }
+        '400':
+          description: Données invalides
+        '409':
+          description: Une expédition existe déjà pour cet orderId
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+  /api/shipments/order/{orderId}:
+    get:
+      summary: Rechercher une expédition par identifiant de commande
+      operationId: getShipmentByOrder
+      parameters:
+        - name: orderId
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Expédition trouvée
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Shipment' }
+        '404':
+          description: Expédition introuvable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+  /api/shipments/{id}/status:
+    patch:
+      summary: Modifier le statut d'une expédition
+      description: |
+        Transitions permises : PREPARING -> SHIPPED ou CANCELLED ;
+        SHIPPED -> IN_TRANSIT ; IN_TRANSIT -> DELIVERED.
+        Les états DELIVERED et CANCELLED sont terminaux.
+      operationId: updateShipmentStatus
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status: { $ref: '#/components/schemas/ShipmentStatus' }
+            example:
+              status: SHIPPED
+      responses:
+        '200':
+          description: Statut mis à jour
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Shipment' }
+        '400':
+          description: Statut inconnu ou données invalides
+        '404':
+          description: Expédition introuvable
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+        '409':
+          description: Transition de statut interdite
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Message' }
+components:
+  schemas:
+    ShipmentStatus:
+      type: string
+      enum: [PREPARING, SHIPPED, IN_TRANSIT, DELIVERED, CANCELLED]
+    Address:
+      type: object
+      required: [name, address, city]
+      properties:
+        name: { type: string }
+        address: { type: string }
+        city: { type: string }
+    CreateShipmentRequest:
+      type: object
+      required: [orderId, address]
+      properties:
+        orderId: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+    Shipment:
+      type: object
+      required: [id, orderId, address, trackingNumber, status, createdAt, updatedAt]
+      properties:
+        id: { type: string, format: uuid }
+        orderId: { type: string }
+        address: { $ref: '#/components/schemas/Address' }
+        trackingNumber: { type: string, example: MSOA-AB5ED67C54B6 }
+        status: { $ref: '#/components/schemas/ShipmentStatus' }
+        createdAt: { type: string, example: '2026-11-06T01:30:00+00:00' }
+        updatedAt: { type: string, example: '2026-11-06T01:40:00+00:00' }
+    Message:
+      type: object
+      properties:
+        message: { type: string }
